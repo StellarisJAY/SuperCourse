@@ -50,6 +50,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if(!ValidatorUtil.isMobileValidate(loginVO.getId())){
             throw new GlobalException(CommonResultEnum.LOGIN_ERROR);
         }
+        // 数据库获取用户
         User user = baseMapper.selectById(loginVO.getId());
         // 用户不存在
         if(user == null){
