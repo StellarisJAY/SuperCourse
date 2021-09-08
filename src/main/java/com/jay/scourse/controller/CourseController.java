@@ -40,6 +40,7 @@ public class CourseController {
 
     @PostMapping("/add")
     public CommonResult addCourse(User user, @RequestBody @Valid Course course){
+        // 检查用户操作权限
         if(user.getUserType() != UserType.TEACHER){
             return CommonResult.fail(CommonResultEnum.UNAUTHORIZED_OPERATION_ERROR, null);
         }

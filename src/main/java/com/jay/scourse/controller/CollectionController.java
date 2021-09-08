@@ -33,9 +33,11 @@ public class CollectionController {
 
     @PostMapping("/add")
     public CommonResult addCollection(User user, @RequestBody Collection collection){
+        // 检查用户操作权限
         if(user.getUserType() != UserType.TEACHER){
             throw new GlobalException(CommonResultEnum.UNAUTHORIZED_OPERATION_ERROR);
         }
+        //  设置题目集冗余字段 教师id
         collection.setTeacherId(user.getId());
         collectionService.save(collection);
         return CommonResult.success(CommonResultEnum.INSERT_SUCCESS, collection);
@@ -51,9 +53,11 @@ public class CollectionController {
 
     @PostMapping("/update")
     public CommonResult updateCollection(User user, @RequestBody Collection collection){
+        // 验证用户操作权限
         if(user.getUserType() != UserType.TEACHER || !user.getId().equals(collection.getTeacherId())){
             throw new GlobalException(CommonResultEnum.UNAUTHORIZED_OPERATION_ERROR);
         }
+
         collectionService.updateById(collection);
         return CommonResult.success(CommonResultEnum.MODIFICATION_SUCCESS, collection);
     }
