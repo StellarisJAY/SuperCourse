@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.Min;
 import java.io.Serializable;
 
 /**
@@ -47,6 +48,7 @@ public class Practice implements Serializable {
     /**
      * 时间限制，单位s，0为不限时
      */
+    @Min(0)
     private Integer timeLimit;
 
 

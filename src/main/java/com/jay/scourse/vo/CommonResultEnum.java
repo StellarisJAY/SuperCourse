@@ -38,7 +38,9 @@ public enum CommonResultEnum {
     VIDEO_PLAY_AUTH_ERROR(500901, "视频播放凭证获取错误"),
     VIDEO_NOT_FOUND_ERROR(500902, "视频不存在"),
     CREATE_UPLOAD_VIDEO_REQUEST_ERROR(500903, "创建上传请求错误"),
-    REFRESH_UPLOAD_VIDEO_REQUEST_ERROR(500904, "刷新上传请求错误");
+    REFRESH_UPLOAD_VIDEO_REQUEST_ERROR(500904, "刷新上传请求错误"),
+
+    PRACTICE_TOTAL_SCORE_ERROR(5010101, "练习总分必须等于100");
     int code;
     String message;
 
