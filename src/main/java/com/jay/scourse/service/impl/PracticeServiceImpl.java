@@ -101,7 +101,7 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
         }
         // 未完成练习，返回无答案题目列表
         else{
-            return CommonResult.success(CommonResultEnum.SUCCESS, getPractice(practiceId, true));
+            return CommonResult.success(CommonResultEnum.SUCCESS, getPractice(practiceId, false));
         }
     }
 
