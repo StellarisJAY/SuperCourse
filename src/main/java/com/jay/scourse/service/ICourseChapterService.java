@@ -21,7 +21,7 @@ public interface ICourseChapterService extends IService<CourseChapter> {
      * @param courseId 课程id
      * @return CommonResult
      */
-    public CommonResult getCourseChapters(User user, Long courseId);
+    CommonResult getCourseChapters(User user, Long courseId);
 
     /**
      * 添加章节
@@ -29,7 +29,7 @@ public interface ICourseChapterService extends IService<CourseChapter> {
      * @param chapter 章节实体
      * @return CommonResult
      */
-    public CommonResult addChapter(User user, CourseChapter chapter);
+    CommonResult addChapter(User user, CourseChapter chapter);
 
     /**
      * 删除章节
@@ -37,5 +37,5 @@ public interface ICourseChapterService extends IService<CourseChapter> {
      * @param chapter 章节实体
      * @return CommonResult
      */
-    public CommonResult deleteChapter(User user, CourseChapter chapter);
+    CommonResult deleteChapter(User user, CourseChapter chapter);
 }

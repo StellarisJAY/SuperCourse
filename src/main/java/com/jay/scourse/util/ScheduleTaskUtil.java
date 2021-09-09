@@ -1,5 +1,7 @@
 package com.jay.scourse.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -15,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Jay
  * @date 2021/8/27
  **/
+@Slf4j
 public class ScheduleTaskUtil {
     private static final ScheduledThreadPoolExecutor THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(3, new ThreadFactory() {
         private final AtomicInteger nextId = new AtomicInteger(1);
@@ -37,6 +40,7 @@ public class ScheduleTaskUtil {
             long startTimeMillis = startTime.toEpochSecond(ZoneOffset.of("+8"));
             long currentTimeMillis = System.currentTimeMillis();
             THREAD_POOL_EXECUTOR.schedule(task, startTimeMillis - currentTimeMillis, TimeUnit.MILLISECONDS);
+            log.info("任务: {} 已提交，执行时间：{}", task.toString(), startTime.toLocalTime());
         }
     }
 }

@@ -44,4 +44,11 @@ public interface IQuestionService extends IService<Question> {
      * @return CommonResult
      */
     CommonResult getQuestionList(User user, Long collectionId, Integer pageNum, Integer pageSize);
+
+    /**
+     * 获取题目答案
+     * @param questionId 题目id
+     * @return 答案列表
+     */
+    List<String> getAnswer(Long questionId);
 }
