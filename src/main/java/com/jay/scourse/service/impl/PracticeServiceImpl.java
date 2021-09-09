@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -105,6 +106,28 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
         }
     }
 
+    @Override
+    public CommonResult listChapterPractice(User user, Long courseId, Long chapterId) {
+        CourseChapter chapter = getChapter(courseId, chapterId);
+        if(chapter == null){
+            throw new GlobalException(CommonResultEnum.CHAPTER_NOT_EXIST_ERROR);
+        }
+        // 缓存读取该章节的所有练习
+        List<Object> rawList = redisTemplate.opsForList().range(CacheKey.CHAPTER_PRACTICE + chapterId, 0, -1);
+        List<Practice> practices;
+        // 缓存未命中
+        if(rawList == null || rawList.isEmpty()){
+            practices= query().eq("chapter_id", chapterId).list();
+            // 写回缓存
+            redisTemplate.opsForList().rightPushAll(CacheKey.CHAPTER_PRACTICE + chapter, practices.toArray());
+        }
+        else{
+            practices = rawList.stream().map(raw->(Practice)raw).collect(Collectors.toList());
+        }
+
+        return CommonResult.success(CommonResultEnum.SUCCESS, practices);
+    }
+
     /**
      * 获取课程信息
      * @param courseId 课程id
@@ -123,7 +146,7 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
     }
 
     private CourseChapter getChapter(Long courseId, Long chapterId){
-        List<Object> rawList = redisTemplate.opsForList().range(CacheKey.COURSE_PRACTICE_COUNT_PREFIX + courseId, 0, -1);
+        List<Object> rawList = redisTemplate.opsForList().range(CacheKey.COURSE_CHAPTER_PREFIX + courseId, 0, -1);
         if(rawList == null){
             return courseChapterMapper.selectById(chapterId);
         }

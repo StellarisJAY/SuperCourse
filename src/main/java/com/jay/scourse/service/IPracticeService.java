@@ -31,4 +31,13 @@ public interface IPracticeService extends IService<Practice> {
      * @return CommonResult
      */
     CommonResult getPracticeForStudent(User user, Long practiceId);
+
+    /**
+     * 获取章节练习
+     * @param user user
+     * @param chapterId 章节id
+     * @param courseId 课程id
+     * @return CommonResult
+     */
+    CommonResult listChapterPractice(User user, Long courseId, Long chapterId);
 }
