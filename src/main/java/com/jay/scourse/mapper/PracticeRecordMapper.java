@@ -22,4 +22,13 @@ public interface PracticeRecordMapper extends BaseMapper<PracticeRecord> {
      */
     @Select("SELECT * FROM t_practice_record WHERE uid=#{uid} AND pid=#{pid}")
     PracticeRecord selectByIds(@Param("uid") String uid, @Param("pid") Long pid);
+
+    /**
+     * 查询用户完成练习数量
+     * @param uid uid
+     * @param cid cid
+     * @return int
+     */
+    @Select("SELECT COUNT(*) FROM t_practice_record pr WHERE uid = #{uid} AND pid IN (SELECT id FROM t_practice WHERE course_id=#{cid})")
+    Integer getUserRecordCount(@Param("uid") String uid, @Param("cid") Long cid);
 }

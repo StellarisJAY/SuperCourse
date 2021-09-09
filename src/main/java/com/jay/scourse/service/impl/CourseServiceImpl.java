@@ -7,6 +7,8 @@ import com.jay.scourse.entity.User;
 import com.jay.scourse.entity.UserType;
 import com.jay.scourse.exception.GlobalException;
 import com.jay.scourse.mapper.CourseMapper;
+import com.jay.scourse.mapper.PracticeMapper;
+import com.jay.scourse.mapper.PracticeRecordMapper;
 import com.jay.scourse.mapper.VideoMapper;
 import com.jay.scourse.service.ICourseService;
 import com.jay.scourse.service.IUserCourseService;
@@ -40,6 +42,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     private final IUserCourseService userCourseService;
     private final VideoMapper videoMapper;
     private final IWatchRecordService watchRecordService;
+    private final PracticeMapper practiceMapper;
+    private final PracticeRecordMapper practiceRecordMapper;
     /**
      * 课程信息缓存key
      */
@@ -52,11 +56,15 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
 
     @Autowired
-    public CourseServiceImpl(RedisTemplate<String, Object> redisTemplate, IUserCourseService userCourseService, VideoMapper videoMapper, IWatchRecordService watchRecordService) {
+    public CourseServiceImpl(RedisTemplate<String, Object> redisTemplate, IUserCourseService userCourseService,
+                             VideoMapper videoMapper, IWatchRecordService watchRecordService,
+                             PracticeMapper practiceMapper, PracticeRecordMapper practiceRecordMapper) {
         this.redisTemplate = redisTemplate;
         this.userCourseService = userCourseService;
         this.videoMapper = videoMapper;
         this.watchRecordService = watchRecordService;
+        this.practiceMapper = practiceMapper;
+        this.practiceRecordMapper = practiceRecordMapper;
     }
 
     @Override
@@ -152,7 +160,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         }
         if(practiceTotal == null){
             // 练习总数缓存未命中
-            practiceTotal = 0;
+            practiceTotal = practiceMapper.getCoursePracticeCount(courseId);
+            redisTemplate.opsForValue().set(CacheKey.COURSE_PRACTICE_COUNT_PREFIX + courseId, practiceTotal);
         }
 
         // 数据库查询视频观看记录
@@ -161,12 +170,13 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                 .eq("course_id", courseId)
                 .eq("finished", 1)
                 .count();
+        Integer finishedPractice = practiceRecordMapper.getUserRecordCount(user.getId(), courseId);
         // 封装结果map
         Map<String, Object> resultMap = new HashMap<>(16);
         resultMap.put("videoTotal", videoTotal);
         resultMap.put("practiceTotal", practiceTotal);
         resultMap.put("watchedVideo", watchedVideo);
-        resultMap.put("finishedPractice", 0);
+        resultMap.put("finishedPractice", finishedPractice);
         return CommonResult.success(CommonResultEnum.SUCCESS, resultMap);
     }
 

@@ -52,4 +52,12 @@ public interface PracticeMapper extends BaseMapper<Practice> {
      */
     @Select("SELECT p.* FROM t_practice p WHERE p.id=#{pid}")
     PracticeAnsweredVO getPracticeAnsweredVO(@Param("pid") Long pid);
+
+    /**
+     * 查询课程总的练习数量
+     * @param courseId 课程id
+     * @return int
+     */
+    @Select("SELECT COUNT(*) FROM t_practice p WHERE p.course_id=#{cid}")
+    Integer getCoursePracticeCount(@Param("cid") Long courseId);
 }

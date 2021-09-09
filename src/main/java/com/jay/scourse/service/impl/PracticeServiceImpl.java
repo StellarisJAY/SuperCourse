@@ -119,7 +119,9 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
         if(rawList == null || rawList.isEmpty()){
             practices= query().eq("chapter_id", chapterId).list();
             // 写回缓存
-            redisTemplate.opsForList().rightPushAll(CacheKey.CHAPTER_PRACTICE + chapter, practices.toArray());
+            if(practices != null && !practices.isEmpty()){
+                redisTemplate.opsForList().rightPushAll(CacheKey.CHAPTER_PRACTICE + chapter, practices.toArray());
+            }
         }
         else{
             practices = rawList.stream().map(raw->(Practice)raw).collect(Collectors.toList());
