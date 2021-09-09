@@ -37,4 +37,9 @@ public class PracticeController {
     public CommonResult getPracticeForStudent(User user, @RequestParam("practiceId") Long practiceId){
         return practiceService.getPracticeForStudent(user, practiceId);
     }
+
+    @GetMapping("/list")
+    public CommonResult getChapterPractices(User user,@RequestParam("courseId") Long courseId, @RequestParam("chapterId") Long chapterId){
+        return practiceService.listChapterPractice(user, courseId, chapterId);
+    }
 }

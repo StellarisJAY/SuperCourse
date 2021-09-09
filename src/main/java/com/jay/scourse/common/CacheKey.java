@@ -27,4 +27,6 @@ public class CacheKey {
     public static final String PRACTICE_INFO = "practice_info_";
 
     public static final String QUESTION_ANSWER = "question_answer_";
+
+    public static final String CHAPTER_PRACTICE = "chapter_practice_";
 }
