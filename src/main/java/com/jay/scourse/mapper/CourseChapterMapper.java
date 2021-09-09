@@ -2,8 +2,6 @@ package com.jay.scourse.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.jay.scourse.entity.CourseChapter;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
 
 /**
  * <p>
