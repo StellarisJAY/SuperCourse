@@ -5,9 +5,7 @@ import com.jay.scourse.service.IPracticeService;
 import com.jay.scourse.vo.CommonResult;
 import com.jay.scourse.vo.NewPracticeVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -33,5 +31,10 @@ public class PracticeController {
     @PostMapping("/add")
     public CommonResult addPractice(User user, @Valid NewPracticeVO practiceVO){
         return practiceService.addPractice(user, practiceVO);
+    }
+
+    @GetMapping()
+    public CommonResult getPracticeForStudent(User user, @RequestParam("practiceId") Long practiceId){
+        return practiceService.getPracticeForStudent(user, practiceId);
     }
 }

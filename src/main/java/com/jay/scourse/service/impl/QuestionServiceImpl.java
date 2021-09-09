@@ -128,6 +128,26 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         return CommonResult.success(CommonResultEnum.SUCCESS, result);
     }
 
+    @Override
+    public List<String> getAnswer(Long questionId) {
+        // 缓存获取答案列表
+        List<Object> rawList = redisTemplate.opsForList().range(CacheKey.QUESTION_ANSWER + questionId, 0, -1);
+        List<String> answer;
+        // cache missed
+        if(rawList == null || rawList.isEmpty()){
+
+            //数据库获取
+            answer = baseMapper.getAnswer(questionId);
+            // 写回缓存
+            redisTemplate.opsForList().rightPushAll(CacheKey.QUESTION_ANSWER + questionId, answer.toArray());
+        }
+        else{
+            answer = rawList.stream().map(raw->(String)raw).collect(Collectors.toList());
+        }
+
+        return answer;
+    }
+
     /**
      * 检查操作权限
      * 检查题目的目标题集是否属于该用户

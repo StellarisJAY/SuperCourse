@@ -3,6 +3,8 @@ package com.jay.scourse.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.jay.scourse.entity.Practice;
 import com.jay.scourse.entity.Question;
+import com.jay.scourse.vo.PracticeAnsweredVO;
+import com.jay.scourse.vo.PracticeVO;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -43,4 +45,12 @@ public interface PracticeMapper extends BaseMapper<Practice> {
      */
     @Select("SELECT pq.score FROM t_practice_question pq WHERE pq.pid=#{pid} ")
     List<Double> getQuestionScores(@Param("pid") Long pid);
+
+    /**
+     * 查询练习
+     * @param pid 练习id
+     * @return PracticeVO
+     */
+    @Select("SELECT p.* FROM t_practice p WHERE p.id=#{pid}")
+    PracticeAnsweredVO getPracticeAnsweredVO(@Param("pid") Long pid);
 }

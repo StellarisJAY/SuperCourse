@@ -21,4 +21,10 @@ public class CacheKey {
 
     public static final String PRACTICE_SCORE_PREFIX = "practice_score_";
     public static final String PRACTICE_QUESTION = "practice_question_";
+
+    public static final String COURSE_CHAPTER_PREFIX = "course_chapter_";
+
+    public static final String PRACTICE_INFO = "practice_info_";
+
+    public static final String QUESTION_ANSWER = "question_answer_";
 }

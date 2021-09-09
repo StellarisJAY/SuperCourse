@@ -4,18 +4,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jay.scourse.common.CacheKey;
 import com.jay.scourse.entity.*;
 import com.jay.scourse.exception.GlobalException;
-import com.jay.scourse.mapper.CourseMapper;
-import com.jay.scourse.mapper.PracticeMapper;
-import com.jay.scourse.mapper.PracticeRecordMapper;
+import com.jay.scourse.mapper.*;
 import com.jay.scourse.service.IPracticeService;
+import com.jay.scourse.service.IQuestionService;
 import com.jay.scourse.vo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -31,17 +30,25 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
     private final RedisTemplate<String, Object> redisTemplate;
     private final CourseMapper courseMapper;
     private final PracticeRecordMapper practiceRecordMapper;
+    private final CourseChapterMapper courseChapterMapper;
+    private final IQuestionService questionService;
+
     private static final double STANDARD_TOTAL_SCORE = 100.0;
     @Autowired
-    public PracticeServiceImpl(RedisTemplate<String, Object> redisTemplate, CourseMapper courseMapper, PracticeRecordMapper practiceRecordMapper) {
+    public PracticeServiceImpl(RedisTemplate<String, Object> redisTemplate, CourseMapper courseMapper,
+                               PracticeRecordMapper practiceRecordMapper, CourseChapterMapper courseChapterMapper,
+                               IQuestionService questionService) {
         this.redisTemplate = redisTemplate;
         this.courseMapper = courseMapper;
         this.practiceRecordMapper = practiceRecordMapper;
+        this.courseChapterMapper = courseChapterMapper;
+        this.questionService = questionService;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CommonResult addPractice(User user, NewPracticeVO practiceVO) {
+        System.out.println(practiceVO);
         // 检查用户类型
         if(user.getUserType() != UserType.TEACHER){
             throw new GlobalException(CommonResultEnum.INVALID_LOGIN_ERROR);
@@ -57,9 +64,18 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
 
         // 检查练习所属课程是否属于该用户
         Course course = getCourse(practiceVO.getCourseId());
+        // 检查课程是否存在
+        if(course == null){
+            throw new GlobalException(CommonResultEnum.COURSE_NOT_EXIST_ERROR);
+        }
         if(!user.getId().equals(course.getTeacherId())){
             throw new GlobalException(CommonResultEnum.UNAUTHORIZED_OPERATION_ERROR);
         }
+        // 检查章节是否存在
+        if(getChapter(practiceVO.getCourseId(), practiceVO.getChapterId()) == null){
+            throw new GlobalException(CommonResultEnum.CHAPTER_NOT_EXIST_ERROR);
+        }
+
         // 添加练习到数据库
         baseMapper.insert(practiceVO);
         List<Long> questions = practiceVO.getQuestions();
@@ -81,11 +97,11 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
         PracticeRecord practiceRecord = getPracticeRecord(user.getId(), practiceId);
         // 已完成练习，返回带有答案的题目列表
         if(practiceRecord != null){
-            return CommonResult.success(CommonResultEnum.SUCCESS, null);
+            return CommonResult.success(CommonResultEnum.SUCCESS, getPractice(practiceId, true));
         }
         // 未完成练习，返回无答案题目列表
         else{
-            return CommonResult.success(CommonResultEnum.SUCCESS, getPracticeNoAnswers(practiceId));
+            return CommonResult.success(CommonResultEnum.SUCCESS, getPractice(practiceId, true));
         }
     }
 
@@ -106,6 +122,19 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
         return course;
     }
 
+    private CourseChapter getChapter(Long courseId, Long chapterId){
+        List<Object> rawList = redisTemplate.opsForList().range(CacheKey.COURSE_PRACTICE_COUNT_PREFIX + courseId, 0, -1);
+        if(rawList == null){
+            return courseChapterMapper.selectById(chapterId);
+        }
+        for(Object o : rawList){
+            if(((CourseChapter)o).getId().equals(chapterId)){
+                return (CourseChapter)o;
+            }
+        }
+        return null;
+    }
+
     /**
      * 获取练习记录
      * @param userId 用户id
@@ -122,35 +151,35 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
     }
 
 
-    private PracticeVO getPracticeNoAnswers(Long practiceId){
-        List<Object> rawQuestionList = redisTemplate.opsForList().range(CacheKey.PRACTICE_QUESTION + practiceId, 0, -1);
-        List<Question> questions;
-        // 缓存命中
-        if(rawQuestionList != null && !rawQuestionList.isEmpty()){
-            questions = rawQuestionList.stream().map(raw -> (Question) raw).collect(Collectors.toList());
+    private PracticeVO getPractice(Long practiceId, boolean withAnswer){
+        // 缓存获取练习详情，包括题目和分数
+        PracticeAnsweredVO result = (PracticeAnsweredVO)redisTemplate.opsForValue().get(CacheKey.PRACTICE_INFO + practiceId);
+        boolean cacheMissed = false;
+        // 缓存未命中
+        if(result == null){
+            result = baseMapper.getPracticeAnsweredVO(practiceId);
+            cacheMissed = true;
         }
-        // 缓存未命中，从数据库获取
-        else{
-            questions = baseMapper.getQuestionsNoAnswer(practiceId);
-            // 写回缓存
-            redisTemplate.opsForList().rightPushAll(CacheKey.PRACTICE_QUESTION + practiceId, questions.toArray());
+        // 缓存无题目和分数信息
+        if(result.getQuestions() == null || result.getScores() == null){
+            cacheMissed = true;
+            result.setQuestions(baseMapper.getQuestionsNoAnswer(practiceId));
+            result.setScores(baseMapper.getQuestionScores(practiceId));
         }
 
-        List<Object> rawScoreList = redisTemplate.opsForList().range(CacheKey.PRACTICE_SCORE_PREFIX + practiceId, 0, -1);
-        List<Double> scores;
-        if(rawScoreList != null && !rawScoreList.isEmpty()){
-            scores = rawScoreList.stream().map(raw->(Double)raw).collect(Collectors.toList());
-        }
-        // 缓存未命中，从数据库获取
-        else{
-            scores = baseMapper.getQuestionScores(practiceId);
+        if(cacheMissed){
             // 写回缓存
-            redisTemplate.opsForList().rightPushAll(CacheKey.PRACTICE_SCORE_PREFIX + practiceId, scores.toArray());
+            redisTemplate.opsForValue().set(CacheKey.PRACTICE_INFO + practiceId, result);
         }
-        PracticeVO practiceVO = new PracticeVO();
-        practiceVO.setQuestions(questions);
-        practiceVO.setScores(scores);
-        return practiceVO;
+        // 获取题目答案
+        if(withAnswer){
+            result.setAnswers(new ArrayList<>());
+            for(Question question : result.getQuestions()){
+                result.getAnswers().add(questionService.getAnswer(question.getId()));
+            }
+            return result;
+        }
+        return result;
     }
 
 }

@@ -43,4 +43,12 @@ public interface QuestionMapper extends BaseMapper<Question> {
      */
     @Select("SELECT qid FROM t_collection_question WHERE cid=#{cid}")
     List<Long> getCollectionQuestions(@Param("cid") Long cid);
+
+    /**
+     * 查询题目答案
+     * @param qid 题目id
+     * @return List
+     */
+    @Select("SELECT answer FROM t_answer WHERE qid=#{qid}")
+    List<String> getAnswer(@Param("qid") Long qid);
 }
