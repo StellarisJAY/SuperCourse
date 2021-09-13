@@ -4,6 +4,7 @@ import com.aliyuncs.vod.model.v20170321.CreateUploadVideoResponse;
 import com.aliyuncs.vod.model.v20170321.GetVideoPlayAuthResponse;
 import com.aliyuncs.vod.model.v20170321.RefreshUploadVideoResponse;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jay.scourse.common.CacheKey;
 import com.jay.scourse.entity.Course;
 import com.jay.scourse.entity.User;
 import com.jay.scourse.entity.UserType;
@@ -39,12 +40,9 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
     private final RedisTemplate<String, Object> redisTemplate;
     private final ICourseService courseService;
 
-    /**
-     * 视频信息缓存key前缀
-     */
-    private static final String VIDEO_CACHE_PREFIX = "video_";
+   
 
-    private static final String CACHE_CHAPTER_VIDEO_LIST = "chapter_video_";
+    
     /**
      * 缓存key默认超时时间 10 h
      */
@@ -59,7 +57,7 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
     @Override
     public CommonResult getPlayAuth(Long id) {
         // 从缓存获取视频信息
-        Video video = (Video) redisTemplate.opsForValue().get(VIDEO_CACHE_PREFIX + id);
+        Video video = (Video) redisTemplate.opsForValue().get(CacheKey.VIDEO_CACHE_PREFIX + id);
         if(video == null){
             // 从数据库获取video信息
             video = baseMapper.selectById(id);
@@ -68,8 +66,8 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
                 throw new GlobalException(CommonResultEnum.VIDEO_NOT_FOUND_ERROR);
             }
             // 写入缓存，设置超时时间
-            redisTemplate.opsForValue().set(VIDEO_CACHE_PREFIX + id, video);
-            redisTemplate.expire(VIDEO_CACHE_PREFIX + id, VIDEO_CACHE_TIMEOUT);
+            redisTemplate.opsForValue().set(CacheKey.VIDEO_CACHE_PREFIX + id, video);
+            redisTemplate.expire(CacheKey.VIDEO_CACHE_PREFIX + id, VIDEO_CACHE_TIMEOUT);
         }
         GetVideoPlayAuthResponse playAuth = PlayAuthUtil.getVideoPlayAuth(video.getVid());
         return CommonResult.success(CommonResultEnum.SUCCESS, "获取播放凭证成功", playAuth);
@@ -102,14 +100,14 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
         // 添加到数据库
         baseMapper.insert(video);
         // 写入缓存
-        redisTemplate.opsForList().rightPush(CACHE_CHAPTER_VIDEO_LIST + video.getChapterId(), video);
+        redisTemplate.opsForList().rightPush(CacheKey.CHAPTER_VIDEO_LIST + video.getChapterId(), video);
         return CommonResult.success(CommonResultEnum.INSERT_SUCCESS, null);
     }
 
     @Override
     public CommonResult getChapterVideoList(User user, Long chapterId) {
         // 从缓存获取章节的视频列表
-        List<Object> list = redisTemplate.opsForList().range(CACHE_CHAPTER_VIDEO_LIST + chapterId, 0, -1);
+        List<Object> list = redisTemplate.opsForList().range(CacheKey.CHAPTER_VIDEO_LIST + chapterId, 0, -1);
         List<Video> videoList;
         // 缓存命中
         if(list != null && !list.isEmpty()){
@@ -121,7 +119,7 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
             videoList = query().eq("chapter_id", chapterId).list();
             if(videoList != null && !videoList.isEmpty()){
                 // 数据库查询结果写入缓存
-                redisTemplate.opsForList().rightPushAll(CACHE_CHAPTER_VIDEO_LIST + chapterId, videoList.toArray());
+                redisTemplate.opsForList().rightPushAll(CacheKey.CHAPTER_VIDEO_LIST + chapterId, videoList.toArray());
             }
         }
 

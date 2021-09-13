@@ -46,13 +46,9 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     private final PracticeMapper practiceMapper;
     private final PracticeRecordMapper practiceRecordMapper;
     /**
-     * 课程信息缓存key
-     */
-    private static final String CACHE_COURSE_PREFIX = "course_";
-    /**
      * 课程订阅量缓存key
      */
-    private static final String CACHE_COURSE_SUBSCRIBE_PREFIX = "course_sub_count_";
+    
 
 
 
@@ -75,11 +71,11 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         List<CourseVO> courseList = courses.stream().map((CourseVO::new)).collect(Collectors.toList());
         // 从缓存获取关注人数
         for(CourseVO courseVO : courseList){
-            Integer subCount = (Integer)redisTemplate.opsForValue().get(CACHE_COURSE_SUBSCRIBE_PREFIX + courseVO.getId());
+            Integer subCount = (Integer)redisTemplate.opsForValue().get(CacheKey.COURSE_SUBSCRIBE_PREFIX + courseVO.getId());
             // 缓存没有则从数据库获取并写入缓存
             if(subCount == null){
                 subCount = userCourseService.query().eq("course_id", courseVO.getId()).count();
-                redisTemplate.opsForValue().set(CACHE_COURSE_SUBSCRIBE_PREFIX + courseVO.getId(), subCount);
+                redisTemplate.opsForValue().set(CacheKey.COURSE_SUBSCRIBE_PREFIX + courseVO.getId(), subCount);
             }
             // 写入课程vo
             courseVO.setSubscribeCount(subCount);
@@ -90,14 +86,14 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     @Override
     public Course getCourseInfo(Long id) {
         // 从缓存获取课程信息
-        Course course = (Course)redisTemplate.opsForValue().get(CACHE_COURSE_PREFIX + id);
+        Course course = (Course)redisTemplate.opsForValue().get(CacheKey.COURSE_INFO_PREFIX + id);
         // 缓存中没有课程
         if(course == null){
             // 从数据库查询
             course = baseMapper.selectById(id);
             if(course != null){
                 // 查询结果写入缓存
-                redisTemplate.opsForValue().set(CACHE_COURSE_PREFIX + id, course);
+                redisTemplate.opsForValue().set(CacheKey.COURSE_INFO_PREFIX + id, course);
             }
         }
         return course;
@@ -131,7 +127,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
             baseMapper.updateCourseStatus(course.getId(), 2);
         }));
         // 设置课程关注人数缓存
-        redisTemplate.opsForValue().set(CACHE_COURSE_SUBSCRIBE_PREFIX + course.getId(), 0);
+        redisTemplate.opsForValue().set(CacheKey.COURSE_SUBSCRIBE_PREFIX + course.getId(), 0);
         return CommonResult.success(CommonResultEnum.SUCCESS, course);
     }
 
@@ -146,7 +142,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         if(courseInfo != null && courseInfo.getTeacherId().equals(user.getId())){
             baseMapper.updateById(course);
             // 删除缓存旧值
-            redisTemplate.delete(CACHE_COURSE_PREFIX + course.getId());
+            redisTemplate.delete(CacheKey.COURSE_INFO_PREFIX + course.getId());
             return CommonResult.success(CommonResultEnum.MODIFICATION_SUCCESS, null);
         }
         else{
