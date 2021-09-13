@@ -59,7 +59,8 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
         for(Double score : practiceVO.getScores()){
             sum += score;
         }
-        if(sum != STANDARD_TOTAL_SCORE){
+        // 浮点类型不能有==比较
+        if(Double.compare(sum, STANDARD_TOTAL_SCORE) != 0){
             throw new GlobalException(CommonResultEnum.PRACTICE_TOTAL_SCORE_ERROR);
         }
 

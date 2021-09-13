@@ -1,5 +1,10 @@
 package com.jay.scourse.util;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 /**
@@ -10,6 +15,10 @@ import java.time.LocalDateTime;
  * @author Jay
  * @date 2021/9/8
  **/
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class BasicTask {
     private LocalDateTime startTime;
     private Runnable runnable;

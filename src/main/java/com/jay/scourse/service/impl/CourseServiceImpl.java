@@ -13,6 +13,7 @@ import com.jay.scourse.mapper.VideoMapper;
 import com.jay.scourse.service.ICourseService;
 import com.jay.scourse.service.IUserCourseService;
 import com.jay.scourse.service.IWatchRecordService;
+import com.jay.scourse.util.BasicTask;
 import com.jay.scourse.util.ScheduleTaskUtil;
 import com.jay.scourse.vo.CommonResult;
 import com.jay.scourse.vo.CommonResultEnum;
@@ -119,9 +120,16 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         }
         baseMapper.insert(course);
         // 提交课程 开始 状态切换任务
-        ScheduleTaskUtil.submitTask(new CourseStatusTask(course.getId(), 1, redisTemplate, baseMapper), course.getStartTime());
+        ScheduleTaskUtil.submitTask(new BasicTask(course.getStartTime(), ()->{
+            redisTemplate.delete(CacheKey.COURSE_INFO_PREFIX + course.getId());
+            baseMapper.updateCourseStatus(course.getId(), 1);
+        }));
+
         // 提交课程 结束 状态切换任务
-        ScheduleTaskUtil.submitTask(new CourseStatusTask(course.getId(), 2, redisTemplate, baseMapper), course.getEndTime());
+        ScheduleTaskUtil.submitTask(new BasicTask(course.getEndTime(), ()->{
+            redisTemplate.delete(CacheKey.COURSE_INFO_PREFIX + course.getId());
+            baseMapper.updateCourseStatus(course.getId(), 2);
+        }));
         // 设置课程关注人数缓存
         redisTemplate.opsForValue().set(CACHE_COURSE_SUBSCRIBE_PREFIX + course.getId(), 0);
         return CommonResult.success(CommonResultEnum.SUCCESS, course);
@@ -178,34 +186,5 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         resultMap.put("watchedVideo", watchedVideo);
         resultMap.put("finishedPractice", finishedPractice);
         return CommonResult.success(CommonResultEnum.SUCCESS, resultMap);
-    }
-
-
-    /**
-     * 课程状态定时修改任务
-     */
-    static class CourseStatusTask implements Runnable{
-        /**
-         * 课程id
-         */
-        private final Long courseId;
-        private final Integer targetStatus;
-        private final RedisTemplate<String, Object> redisTemplate;
-        private final CourseMapper courseMapper;
-
-        public CourseStatusTask(Long courseId, Integer targetStatus, RedisTemplate<String, Object> redisTemplate, CourseMapper courseMapper) {
-            this.courseId = courseId;
-            this.targetStatus = targetStatus;
-            this.redisTemplate = redisTemplate;
-            this.courseMapper = courseMapper;
-        }
-
-        @Override
-        public void run() {
-            // 删除缓存中的课程信息
-            redisTemplate.delete(CACHE_COURSE_PREFIX + courseId);
-            // 修改数据库信息
-            courseMapper.updateCourseStatus(courseId, targetStatus);
-        }
     }
 }
