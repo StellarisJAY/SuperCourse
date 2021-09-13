@@ -29,4 +29,11 @@ public class CacheKey {
     public static final String QUESTION_ANSWER = "question_answer_";
 
     public static final String CHAPTER_PRACTICE = "chapter_practice_";
+    public static final String COURSE_SUBSCRIBE_PREFIX = "course_sub_count_";
+
+    /**
+     * 视频信息缓存key前缀
+     */
+    public static final String VIDEO_CACHE_PREFIX = "video_";
+    public static final String CHAPTER_VIDEO_LIST = "chapter_video_";
 }

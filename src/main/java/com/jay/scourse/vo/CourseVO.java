@@ -1,7 +1,6 @@
 package com.jay.scourse.vo;
 
 import com.jay.scourse.entity.Course;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

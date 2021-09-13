@@ -1,6 +1,7 @@
 package com.jay.scourse.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jay.scourse.common.CacheKey;
 import com.jay.scourse.entity.Course;
 import com.jay.scourse.entity.CourseChapter;
 import com.jay.scourse.entity.User;
@@ -30,7 +31,6 @@ import java.util.stream.Collectors;
 public class CourseChapterServiceImpl extends ServiceImpl<CourseChapterMapper, CourseChapter> implements ICourseChapterService {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private static final String CACHE_COURSE_CHAPTER_PREFIX = "course_chapter_";
     private final ICourseService courseService;
     @Autowired
     public CourseChapterServiceImpl(RedisTemplate<String, Object> redisTemplate, ICourseService courseService) {
@@ -41,7 +41,7 @@ public class CourseChapterServiceImpl extends ServiceImpl<CourseChapterMapper, C
     @Override
     public CommonResult getCourseChapters(User user, Long courseId) {
         // 从缓存获取章节信息
-        List<Object> list = redisTemplate.opsForList().range(CACHE_COURSE_CHAPTER_PREFIX + courseId, 0, -1);
+        List<Object> list = redisTemplate.opsForList().range(CacheKey.COURSE_CHAPTER_PREFIX + courseId, 0, -1);
         List<CourseChapter> chapters;
         // 缓存没有章节信息
         if(list == null || list.isEmpty()){
@@ -52,7 +52,7 @@ public class CourseChapterServiceImpl extends ServiceImpl<CourseChapterMapper, C
                 redisTemplate 的 隐藏bug，lrPushAll（key, collection）方法是用不了的
              */
             if(chapters != null && !chapters.isEmpty()){
-                redisTemplate.opsForList().rightPushAll(CACHE_COURSE_CHAPTER_PREFIX + courseId, chapters.toArray());
+                redisTemplate.opsForList().rightPushAll(CacheKey.COURSE_CHAPTER_PREFIX + courseId, chapters.toArray());
             }
         }
         else{
@@ -72,7 +72,7 @@ public class CourseChapterServiceImpl extends ServiceImpl<CourseChapterMapper, C
         // 数据库写入
         baseMapper.insert(chapter);
         // 缓存的课程章节列表插入章节，右侧入栈
-        redisTemplate.opsForList().rightPush(CACHE_COURSE_CHAPTER_PREFIX + courseId, chapter);
+        redisTemplate.opsForList().rightPush(CacheKey.COURSE_CHAPTER_PREFIX + courseId, chapter);
 
         return CommonResult.success(CommonResultEnum.SUCCESS, "添加章节成功", chapter);
     }
@@ -84,7 +84,7 @@ public class CourseChapterServiceImpl extends ServiceImpl<CourseChapterMapper, C
             throw new GlobalException(CommonResultEnum.UNAUTHORIZED_OPERATION_ERROR);
         }
         // 删除缓存内容
-        redisTemplate.opsForList().remove(CACHE_COURSE_CHAPTER_PREFIX + chapter.getCourseId(), 1, chapter);
+        redisTemplate.opsForList().remove(CacheKey.COURSE_CHAPTER_PREFIX + chapter.getCourseId(), 1, chapter);
         // 删除数据库内容
         int status = baseMapper.deleteById(chapter.getId());
         // 删除状态为0，该章节不存在

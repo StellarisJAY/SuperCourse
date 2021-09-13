@@ -18,9 +18,8 @@ public interface WatchRecordMapper extends BaseMapper<WatchRecord> {
     /**
      * 更新观看记录
      * @param watchRecord 观看记录实体
-     * @return status
      */
     @Update("UPDATE t_watch_record SET time=#{record.time}, finished=#{record.finished} WHERE user_id=#{record.userId} AND video_id=#{record.videoId}")
-    int updateWatchRecord(@Param("record") WatchRecord watchRecord);
+    void updateWatchRecord(@Param("record") WatchRecord watchRecord);
 
 }
