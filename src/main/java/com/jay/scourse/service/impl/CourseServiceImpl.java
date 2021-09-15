@@ -45,12 +45,6 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     private final IWatchRecordService watchRecordService;
     private final PracticeMapper practiceMapper;
     private final PracticeRecordMapper practiceRecordMapper;
-    /**
-     * 课程订阅量缓存key
-     */
-    
-
-
 
     @Autowired
     public CourseServiceImpl(RedisTemplate<String, Object> redisTemplate, IUserCourseService userCourseService,

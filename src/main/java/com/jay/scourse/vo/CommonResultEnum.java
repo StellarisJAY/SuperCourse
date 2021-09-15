@@ -30,6 +30,7 @@ public enum CommonResultEnum {
     UNAUTHORIZED_OPERATION_ERROR(500105, "未授权操作"),
 
     COURSE_NOT_EXIST_ERROR(500201, "课程不存在"),
+    COURSE_ALREAD_END_ERROR(500202, "课程已结束"),
 
     CHAPTER_NOT_EXIST_ERROR(500301, "章节不存在"),
     /**
@@ -40,7 +41,9 @@ public enum CommonResultEnum {
     CREATE_UPLOAD_VIDEO_REQUEST_ERROR(500903, "创建上传请求错误"),
     REFRESH_UPLOAD_VIDEO_REQUEST_ERROR(500904, "刷新上传请求错误"),
 
-    PRACTICE_TOTAL_SCORE_ERROR(5010101, "练习总分必须等于100");
+    PRACTICE_TOTAL_SCORE_ERROR(5010101, "练习总分必须等于100"),
+    PRACTICE_NOT_EXIST_ERROR(50010102, "练习不存在"),
+    DUPLICATE_PRACTICE_RECORD_ERROR(50010103, "禁止重复提交答题");
     int code;
     String message;
 

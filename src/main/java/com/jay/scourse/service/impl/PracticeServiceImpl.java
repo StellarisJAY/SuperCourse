@@ -99,11 +99,11 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
         PracticeRecord practiceRecord = getPracticeRecord(user.getId(), practiceId);
         // 已完成练习，返回带有答案的题目列表
         if(practiceRecord != null){
-            return CommonResult.success(CommonResultEnum.SUCCESS, getPractice(practiceId, true));
+            return CommonResult.success(CommonResultEnum.SUCCESS, getPracticeInfo(practiceId, true));
         }
         // 未完成练习，返回无答案题目列表
         else{
-            return CommonResult.success(CommonResultEnum.SUCCESS, getPractice(practiceId, false));
+            return CommonResult.success(CommonResultEnum.SUCCESS, getPracticeInfo(practiceId, false));
         }
     }
 
@@ -176,8 +176,8 @@ public class PracticeServiceImpl extends ServiceImpl<PracticeMapper, Practice> i
         return practiceRecord;
     }
 
-
-    private PracticeVO getPractice(Long practiceId, boolean withAnswer){
+    @Override
+    public PracticeVO getPracticeInfo(Long practiceId, boolean withAnswer){
         // 缓存获取练习详情，包括题目和分数
         PracticeAnsweredVO result = (PracticeAnsweredVO)redisTemplate.opsForValue().get(CacheKey.PRACTICE_INFO + practiceId);
         boolean cacheMissed = false;
