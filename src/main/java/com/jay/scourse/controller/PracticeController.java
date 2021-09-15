@@ -29,7 +29,7 @@ public class PracticeController {
     }
 
     @PostMapping("/add")
-    public CommonResult addPractice(User user, @Valid NewPracticeVO practiceVO){
+    public CommonResult addPractice(User user, @RequestBody @Valid NewPracticeVO practiceVO){
         return practiceService.addPractice(user, practiceVO);
     }
 
