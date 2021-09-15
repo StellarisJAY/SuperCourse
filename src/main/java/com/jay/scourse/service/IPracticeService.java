@@ -5,6 +5,7 @@ import com.jay.scourse.entity.Practice;
 import com.jay.scourse.entity.User;
 import com.jay.scourse.vo.CommonResult;
 import com.jay.scourse.vo.NewPracticeVO;
+import com.jay.scourse.vo.PracticeVO;
 
 /**
  * <p>
@@ -40,4 +41,13 @@ public interface IPracticeService extends IService<Practice> {
      * @return CommonResult
      */
     CommonResult listChapterPractice(User user, Long courseId, Long chapterId);
+
+
+    /**
+     * 获取练习信息
+     * @param practiceId id
+     * @param withAnswer 是否带答案
+     * @return PracticeVO
+     */
+    PracticeVO getPracticeInfo(Long practiceId, boolean withAnswer);
 }
